@@ -31,7 +31,7 @@ import SendIcon from "@mui/icons-material/Send";
 import { useState } from "react";
 import { ErrorMessage, useSender } from "../hooks";
 import { DraggableFile } from "./DraggableFile";
-
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 interface FormValues {
   user: string;
@@ -119,7 +119,12 @@ export default function MainContent() {
           }}
         >
           <GradientCircularProgress />
-          <Typography>Cargando</Typography>
+          <Box sx={{marginLeft:'5rem'}}>
+          <Typography variant="h6" >Procesando.....</Typography>
+          <Typography variant="inherit" >Esto puede tomar varios segundos.</Typography>
+          <Typography variant="inherit" >Espere por favor.</Typography>
+
+          </Box>
         </CardMui>
       ) : (
         <Formik<FormValues>
@@ -134,8 +139,8 @@ export default function MainContent() {
           }}
           validationSchema={object<FormValues>({
             user: string()
-              .email("Correo invalido")
-              .required("Correo requerido"),
+              // .email("Correo invalido")
+              .required("Correo o usuario requerido"),
             password: string().required("Password requerido"),
             message: string().required("Mesaje requerido"),
           })}
@@ -156,12 +161,10 @@ export default function MainContent() {
                   flexDirection: "column",
                   alignItems: "end",
                   backgroundColor: theme.palette.background.default,
-                  padding:'1rem'
+                  padding: "1rem",
                 }}
               >
-                <Box
-                marginBottom="1rem"
-                >
+                <Box marginBottom="1rem">
                   <IconButton
                     color="primary"
                     sx={{
@@ -205,8 +208,7 @@ export default function MainContent() {
                 >
                   {message && <Alert severity="warning">{message}</Alert>}
                   <CustomTextField
-                    label="Correo Skype"
-                    type="email"
+                    label="Correo o Usuario Skype"
                     id="user"
                     name="user"
                     value={values.user}
@@ -214,10 +216,17 @@ export default function MainContent() {
                     helperText={touched.user && errors.user}
                     error={touched.user && errors.user != null}
                     onBlur={handleBlur}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment  position="end">
+                          <AccountCircleIcon  color="primary" />
+                        </InputAdornment>
+                      ),
+                    }}
                   />
                   <CustomTextField
                     label="Password"
-                    type="password"
+                    type={!showPassword ? "password" : undefined}
                     id="password"
                     name="password"
                     value={values.password}
