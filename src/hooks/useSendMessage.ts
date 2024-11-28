@@ -1,12 +1,14 @@
 import { useState } from "react";
 import axiosClient from "../config/AxiosClient";
+import imageCompression from "browser-image-compression";
+import { generarId } from "../helpers";
 
 interface Message {
   user: string;
   password: string;
   message: string;
-  file: string | Blob;
-  image?: string | Blob | undefined;
+  file: File | undefined;
+  image?: File | undefined;
 }
 export interface ErrorMessage {
   contact: string;
@@ -36,14 +38,33 @@ export const useSender = () => {
   }: Message): Promise<DataResponse> => {
     setLoadig(true);
 
-    const formData = new FormData();
-    formData.append("user", user);
-    formData.append("password", password);
-    formData.append("message", message);
-    formData.append("file", file);
-    if (image) formData.append("image", image);
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+    };
 
     try {
+      const formData = new FormData();
+      formData.append("user", user);
+      formData.append("password", password);
+      formData.append("message", message);
+      formData.append("file", file as Blob);
+      if (image) {
+        if (image) {
+          // Comprimir la imagen
+          const compressedBlob = await imageCompression(image, options);
+
+          // Convertir el Blob comprimido en un File con un nombre y tipo
+          const compressedFile = new File(
+            [compressedBlob],
+            `${generarId()}.` + (image.type.split("/")[1] || "jpeg"), // Usa la extensión original si es posible
+            { type: compressedBlob.type }
+          );
+
+          formData.append("image", compressedFile);
+        }
+      }
+
       const { data } = await axiosClient.post<DataDetalResponse>(
         `/sender`,
         formData
@@ -57,11 +78,20 @@ export const useSender = () => {
 
       return {
         status: "success",
-        message: "Envio Exitoso",
+        message: data.detail.message,
         details: [],
       };
     } catch (error: any) {
       setLoadig(false);
+
+      if (error.code == "ERR_NETWORK") {
+        return {
+          status: "failure",
+          message:
+            "Sin comunicacion con el servidor comunicate con el administrador",
+          details: [],
+        };
+      }
 
       if (error.response.data.detail) {
         if (error.response.data.detail.message) {

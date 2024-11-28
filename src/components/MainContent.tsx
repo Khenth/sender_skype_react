@@ -77,8 +77,10 @@ export default function MainContent() {
   const [file, setFile] = React.useState<File | undefined>();
   const [image, setImage] = React.useState<File | undefined>();
   const [message, setMessage] = React.useState<string | undefined>();
+  const [errorSendMessage, setErrorSendMessage] = React.useState<boolean>(true);
 
   const onSubmit = async (data: FormValues) => {
+    setErrorSendMessage(false);
     if (!file) {
       setMessage('No tienes cargo el directorio de destinatarios "excel"');
       return;
@@ -92,6 +94,12 @@ export default function MainContent() {
     });
 
     if (status == "failure") {
+      setMessage(message);
+      setListDetails(details);
+      setErrorSendMessage(true);
+    }
+
+    if (status == "success") {
       setMessage(message);
       setListDetails(details);
     }
@@ -206,7 +214,7 @@ export default function MainContent() {
                     gap: 2,
                   }}
                 >
-                  {message && <Alert severity="warning">{message}</Alert>}
+                  {message && <Alert severity={errorSendMessage ? "error" : undefined}>{message}</Alert>}
                   <CustomTextField
                     label="Correo o Usuario Skype"
                     id="user"
